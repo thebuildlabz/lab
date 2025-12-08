@@ -84,3 +84,33 @@ CREATE POLICY "Service role full access to events" ON project_events
 -- FROM projects
 -- ORDER BY created_at DESC
 -- LIMIT 20;
+
+-- =============================================
+-- Feature Flags
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS feature_flags (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  name TEXT UNIQUE NOT NULL,
+  enabled BOOLEAN DEFAULT true,
+  disabled_reason TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_flags_name ON feature_flags(name);
+
+-- Enable RLS
+ALTER TABLE feature_flags ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access to flags" ON feature_flags
+  FOR ALL USING (true);
+
+-- Initialize default flags (all templates enabled)
+INSERT INTO feature_flags (name, enabled) VALUES
+  ('contractor-crm', true),
+  ('freelancer-invoices', true),
+  ('booking-platform', true),
+  ('agency-dashboard', true),
+  ('basic-crud', true)
+ON CONFLICT (name) DO NOTHING;
