@@ -114,3 +114,44 @@ INSERT INTO feature_flags (name, enabled) VALUES
   ('agency-dashboard', true),
   ('basic-crud', true)
 ON CONFLICT (name) DO NOTHING;
+
+-- =============================================
+-- Referral System
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS referrals (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  project_id TEXT NOT NULL REFERENCES projects(project_id),
+  code TEXT UNIQUE NOT NULL,
+  clicks INTEGER DEFAULT 0,
+  conversions INTEGER DEFAULT 0,
+  last_click_at TIMESTAMPTZ,
+  last_conversion_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(code);
+CREATE INDEX IF NOT EXISTS idx_referrals_project ON referrals(project_id);
+
+-- Track individual conversions
+CREATE TABLE IF NOT EXISTS referral_conversions (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  referral_id BIGINT NOT NULL REFERENCES referrals(id),
+  referrer_project_id TEXT NOT NULL,
+  referred_project_id TEXT NOT NULL,
+  reward_amount INTEGER DEFAULT 250,
+  paid_out BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversions_referral ON referral_conversions(referral_id);
+
+-- Enable RLS
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_conversions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access to referrals" ON referrals
+  FOR ALL USING (true);
+
+CREATE POLICY "Service role full access to conversions" ON referral_conversions
+  FOR ALL USING (true);
