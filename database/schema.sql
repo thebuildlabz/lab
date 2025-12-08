@@ -155,3 +155,67 @@ CREATE POLICY "Service role full access to referrals" ON referrals
 
 CREATE POLICY "Service role full access to conversions" ON referral_conversions
   FOR ALL USING (true);
+
+-- =============================================
+-- Gamification System
+-- =============================================
+
+-- User points ledger
+CREATE TABLE IF NOT EXISTS user_points (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  email TEXT NOT NULL,
+  action TEXT NOT NULL,
+  points INTEGER NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_points_email ON user_points(email);
+CREATE INDEX IF NOT EXISTS idx_points_action ON user_points(action);
+CREATE INDEX IF NOT EXISTS idx_points_created ON user_points(created_at DESC);
+
+-- User badges
+CREATE TABLE IF NOT EXISTS user_badges (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  email TEXT NOT NULL,
+  badge_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(email, badge_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_badges_email ON user_badges(email);
+
+-- User streaks
+CREATE TABLE IF NOT EXISTS user_streaks (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  email TEXT UNIQUE NOT NULL,
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_activity DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_streaks_email ON user_streaks(email);
+
+-- Enable RLS
+ALTER TABLE user_points ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_streaks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access to points" ON user_points FOR ALL USING (true);
+CREATE POLICY "Service role full access to badges" ON user_badges FOR ALL USING (true);
+CREATE POLICY "Service role full access to streaks" ON user_streaks FOR ALL USING (true);
+
+-- Leaderboard helper function
+CREATE OR REPLACE FUNCTION get_leaderboard(limit_count INTEGER DEFAULT 10)
+RETURNS TABLE(email TEXT, points BIGINT) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT up.email, SUM(up.points)::BIGINT as points
+  FROM user_points up
+  GROUP BY up.email
+  ORDER BY points DESC
+  LIMIT limit_count;
+END;
+$$ LANGUAGE plpgsql;

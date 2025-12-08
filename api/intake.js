@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { createReferral, trackReferralConversion } from './lib/referral.js';
+import { awardPoints, updateStreak } from './lib/gamification.js';
 
 const TEMPLATE_MAP = {
   'contractor-crm': ['invoice', 'quote', 'contractor', 'roofing', 'hvac', 'plumbing'],
@@ -84,6 +85,10 @@ export default async function handler(req, res) {
         await logEvent(projectId, 'intake_received', 'Intake: ' + appName);
         referralCode = await createReferral(db, projectId);
         if (ref) await trackReferralConversion(db, ref, projectId);
+        
+        // Gamification: Award points and update streak
+        await awardPoints(db, email, 'intake_submit', { projectId });
+        await updateStreak(db, email);
       }
     } catch (err) { console.error('[INTAKE] DB error:', err); }
   }
