@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 /**
  * Project Update API
  *
@@ -8,7 +9,7 @@
 let supabase = null;
 function getSupabase() {
   if (!supabase && process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
-    const { createClient } = require('@supabase/supabase-js');
+    
     supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
   }
   return supabase;

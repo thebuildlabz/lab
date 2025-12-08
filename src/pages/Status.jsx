@@ -45,7 +45,7 @@ export default function StatusPage() {
         // Simulate deployment progress for demo
         setProject({
           ...found,
-          status: 'deploying',
+          status: 'queued',
           template: found.template || 'contractor-crm',
         });
       }
@@ -81,7 +81,7 @@ export default function StatusPage() {
         const stages = ['queued', 'cloning', 'branding', 'deploying', 'deployed'];
         const currentIndex = stages.indexOf(prev.status);
         if (currentIndex < stages.length - 1) {
-          return { ...prev, status: stages[currentIndex + 1] };
+          const nextStatus = stages[currentIndex + 1]; return { ...prev, status: nextStatus, deployUrl: nextStatus === 'deployed' ? 'https://' + projectId.replace('prj_', '') + '.demo.vercel.app' : prev.deployUrl };
         }
         return prev;
       });
