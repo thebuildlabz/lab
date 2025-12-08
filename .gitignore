@@ -12,6 +12,20 @@ dist
 dist-ssr
 *.local
 
+# Environment (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Factory is separate repo
+factory/
+
+# Scripts with secrets
+scripts/
+
+# Claude config
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +36,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Vercel
+.vercel/
+tools/
