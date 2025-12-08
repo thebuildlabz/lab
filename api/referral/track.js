@@ -25,15 +25,24 @@ export default async function handler(req, res) {
       return res.redirect(302, '/intake');
     }
 
-    // Track the click
+    // Track the click (read/increment/write since Supabase doesn't have db.raw)
     if (db) {
       try {
-        await db.from('referrals')
-          .update({
-            clicks: db.raw('clicks + 1'),
-            last_click_at: new Date().toISOString()
-          })
-          .eq('code', code);
+        const { data: referral } = await db
+          .from('referrals')
+          .select('clicks')
+          .eq('code', code)
+          .single();
+
+        if (referral) {
+          await db.from('referrals')
+            .update({
+              clicks: (referral.clicks || 0) + 1,
+              last_click_at: new Date().toISOString()
+            })
+            .eq('code', code);
+          console.log('[REFERRAL] Click tracked for:', code);
+        }
       } catch (err) {
         console.error('[REFERRAL] Click track error:', err);
       }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Pricing calculator
 function calculatePrice(data) {
@@ -106,6 +106,8 @@ const STEPS = [
 
 export default function IntakePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref');
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
     appIdea: '',
@@ -153,6 +155,7 @@ export default function IntakePage() {
           integrations: formData.integrations,
           timeline: formData.timeline,
           targetCustomer: formData.targetCustomer,
+          ref: refCode,
         }),
       });
 

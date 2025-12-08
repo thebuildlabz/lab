@@ -184,9 +184,15 @@ export async function awardBadge(db, email, badgeId) {
       return false;
     }
 
-    // Award bonus points for badge
+    // Award bonus points for badge (directly insert since badge_earned isn't in POINT_VALUES)
     if (badge.points > 0) {
-      await awardPoints(db, email, 'badge_earned', { badge_id: badgeId });
+      await db.from('user_points').insert({
+        email,
+        action: 'badge_earned',
+        points: badge.points,
+        metadata: { badge_id: badgeId },
+      }).catch(err => console.error('[BADGE] Points error:', err));
+      console.log('[BADGE] Awarded', badge.points, 'bonus points for', badgeId);
     }
 
     console.log('[BADGE] Awarded', badgeId, 'to', email);

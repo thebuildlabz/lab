@@ -21,9 +21,29 @@ const priceMap = {
   'agency-dashboard': 8000,
 };
 
+// Admin auth check
+function verifyAdmin(req) {
+  const authHeader = req.headers.authorization;
+  const adminKey = process.env.ADMIN_API_KEY || 'buildlab2024';
+
+  if (!authHeader) return false;
+
+  // Support both "Bearer <token>" and plain token
+  const token = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : authHeader;
+
+  return token === adminKey;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Verify admin authentication
+  if (!verifyAdmin(req)) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const db = getSupabase();

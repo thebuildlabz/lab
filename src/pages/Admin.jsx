@@ -40,12 +40,17 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/stats');
+      const res = await fetch('/api/admin/stats', {
+        headers: { 'Authorization': 'Bearer ' + ADMIN_PASSWORD },
+      });
       if (res.ok) {
         const data = await res.json();
         setStats(data.stats);
         setProjects(data.projects || []);
         setFlags(data.flags || []);
+      } else if (res.status === 401) {
+        // Token rejected - logout
+        handleLogout();
       }
     } catch (err) {
       console.error('Failed to fetch admin data:', err);
@@ -57,7 +62,10 @@ export default function AdminDashboard() {
     try {
       await fetch('/api/admin/flags', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + ADMIN_PASSWORD,
+        },
         body: JSON.stringify({ name, enabled: !currentValue }),
       });
       fetchDashboardData();
