@@ -16,7 +16,11 @@ function getSupabase() {
 // Admin auth check
 function verifyAdmin(req) {
   const authHeader = req.headers.authorization;
-  const adminKey = process.env.ADMIN_API_KEY || 'buildlab2024';
+  const configuredKey = process.env.ADMIN_API_KEY;
+  const demoKey = process.env.NODE_ENV !== 'production' ? 'buildlab2024' : null;
+  const adminKey = configuredKey || demoKey;
+
+  if (!adminKey) return false;
 
   if (!authHeader) return false;
 

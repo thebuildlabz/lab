@@ -19,7 +19,6 @@ export default function StatusPage() {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   // Load project - try API first, fallback to localStorage
   useEffect(() => {
@@ -33,7 +32,7 @@ export default function StatusPage() {
           setLoading(false);
           return;
         }
-      } catch (e) {
+      } catch {
         // API not available, fallback to localStorage
       }
 
@@ -71,7 +70,7 @@ export default function StatusPage() {
           }
           return;
         }
-      } catch (e) {
+      } catch {
         // API not available
       }
 

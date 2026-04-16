@@ -133,7 +133,7 @@ export async function getUserPoints(db, email) {
 
     if (error) return 0;
     return data.reduce((sum, row) => sum + row.points, 0);
-  } catch (err) {
+  } catch {
     return 0;
   }
 }
@@ -150,7 +150,7 @@ export async function getUserBadges(db, email) {
 
     if (error) return [];
     return data.map(b => ({ ...BADGES[b.badge_id], earned_at: b.created_at }));
-  } catch (err) {
+  } catch {
     return [];
   }
 }

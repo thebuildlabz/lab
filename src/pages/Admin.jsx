@@ -1,43 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
-const ADMIN_PASSWORD = 'buildlab2024';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'buildlab2024';
 
 export default function AdminDashboard() {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('admin_auth') === 'true';
+  });
   const [password, setPassword] = useState('');
   const [stats, setStats] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [flags, setFlags] = useState([]);
 
-  useEffect(() => {
-    if (localStorage.getItem('admin_auth') === 'true') {
-      setAuthenticated(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!authenticated) return;
-    fetchDashboardData();
-  }, [authenticated]);
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      localStorage.setItem('admin_auth', 'true');
-      setAuthenticated(true);
-    } else {
-      alert('Invalid password');
-    }
-  };
-
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('admin_auth');
     setAuthenticated(false);
-  };
+  }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/stats', {
@@ -56,6 +38,21 @@ export default function AdminDashboard() {
       console.error('Failed to fetch admin data:', err);
     }
     setLoading(false);
+  }, [handleLogout]);
+
+  useEffect(() => {
+    if (!authenticated) return;
+    fetchDashboardData();
+  }, [authenticated, fetchDashboardData]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      localStorage.setItem('admin_auth', 'true');
+      setAuthenticated(true);
+    } else {
+      alert('Invalid password');
+    }
   };
 
   const toggleFlag = async (name, currentValue) => {
